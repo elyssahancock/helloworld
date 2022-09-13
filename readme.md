@@ -2,7 +2,7 @@
 
 {Important!  Do not say in this section that this is college assignment.  Talk about what you are trying to accomplish as a software engineer to further your learning.}
 
-Basic Hello World for an easy test case to confirm github is synced}
+Basic Hello World for an easy test case to confirm github is synced and that everything is working to move forward with more advanced programs.
 
 Describe your purpose for creating this software. 
 
