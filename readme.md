@@ -4,7 +4,7 @@ Basic Hello World for an easy test case to confirm github is synced and that eve
 
 
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/ajPfE0GSJBY)
 
 # Development Environment
 
