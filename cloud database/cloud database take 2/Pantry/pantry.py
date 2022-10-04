@@ -10,11 +10,14 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import datetime
+#from datetime import datetime
+
+from pyparsing import col
 
 def main():
 
     # Set up.
-    db_json_file =  "take 3/food-inventory-6cbfd-firebase-adminsdk-zjecw-9714286f35.json"
+    db_json_file =  "food-inventory-6cbfd-firebase-adminsdk-zjecw-9714286f35.json"
     cred = credentials.Certificate(db_json_file)
     firebase_admin.initialize_app(cred)
 
@@ -41,6 +44,7 @@ def main():
     selection = getInput()
     while selection != 0:    
         print(selection)
+        if_expired(collection_name, db)
 
         if selection == 1:
             addItem(collection_name, db)
@@ -51,15 +55,6 @@ def main():
         
         selection = getInput()
         
-
-""" # Querying
-    print("Query")
-    # only adding documents that meet the where clause to the list
-    docs = db.collection(collection_name).where("name", "==", "Bob").get()
-        # Looping through the list of documents in the collection
-    for doc in docs:
-        print(doc.to_dict())
-        """
 
 # ✅
 def getInput():
@@ -89,51 +84,62 @@ def addItem(collection_name, db):
     year = int(date_items[2])
 
     expiration = datetime.datetime(year, month, day)
-    db.collection(collection_name).document(item_name).add({"item": item_name, "expirationDate": expiration})
+    db.collection(collection_name).document(item_name).set({"item": item_name, "expirationDate": expiration})
 
-# ✅ - until ordering is done
+# ✅ 
 def displayItems(collection_name, db):
-
-    
-    docs = db.collection(collection_name).get()
-    print("\n\n\nYour items are:")
-    for doc in docs:
+    expired_docs = db.collection("Near Expiration").get()
+    sorted_expired_docs = orderByDateTime("Near Expiration", db)
+    print("\n\nITEMS TO EXPIRE SOON! ")
+    for doc in sorted_expired_docs:
         dictionary = doc.to_dict()
         print(f"  * {dictionary['item']}")
         expiration_date = dictionary["expirationDate"]
         print(f"  - - {expiration_date}")
-        #   print(convertTimestamp(expiration_date))
-    print("\n\n")
+    print(" - - - - - - - - - - - - - -")
+    
+    docs = db.collection(collection_name).get()
+    results = orderByDateTime(collection_name, db)
+    print("\nAll items:")
+    for doc in results:
+        dictionary = doc.to_dict()
+        print(f"  * {dictionary['item']}")
+        expiration_date = dictionary["expirationDate"]
+        print(f"  - - {expiration_date}")
+
+    
 
 
-# 🅿️
-def convertTimestamp(expiration_date):
-    """0022-09-30 00:00:00+00:00 is passed in"""
-
-    date2_0 = datetime.fromtimestamp(expiration_date)
-    """
-    ExpDate_string = str(expiration_date)
-    year = int(ExpDate_string[0:5])
-    month = ExpDate_string[6:8]
-    if month[0] == "0":
-        month = month[1]
-    month = int(month)
-    day = ExpDate_string[9:11]
-    converted_string = (f" ")
-    """
-    print(date2_0)
+       
 
 
-# 🅿️
+
+
+def if_expired(collection_name, db):
+
+    docs = db.collection(collection_name).get()
+    for doc in docs:
+        dictionary = doc.to_dict()
+        food_date = str(dictionary["expirationDate"])
+        calendar_date = str(datetime.datetime.now() + datetime.timedelta(days = 4))
+
+        if food_date < calendar_date:
+            db.collection("Near Expiration").document(dictionary["item"]).set(dictionary)
+    
+
+# ✅ 
 def deleteItem(collection_name, db):
     item_name = input("Item to be deleted: ")
-    docs = db.collection(collection_name).where("item", "==", item_name).get()
-    for doc in docs:
-        #db.collection(collection_name).document(doc).delete()
-        print(doc)
+    db.collection(collection_name).document(item_name).delete()
 ### Cloud Messaging -> notifacations to operating system 
 
-# ❌
-def orderByDateTime():
-    None
+# ✅ 
+def orderByDateTime(collection_name, db):
+    cities_ref = db.collection(collection_name)
+    query = cities_ref.order_by("expirationDate")
+    results = query.stream()
+    
+    #for doc in results:
+    #    print(f'{doc.id} => {doc.to_dict()}')
+    return results
 main()
